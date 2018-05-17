@@ -144,45 +144,78 @@ ClusterIcon.prototype.onAdd = function () {
     });
   }
 
-  google.maps.event.addDomListener(this.div_, "click", function (e) {
-    cMouseDownInCluster = false;
-    if (!cDraggingMapByCluster) {
-      var theBounds;
-      var mz;
-      var mc = cClusterIcon.cluster_.getMarkerClusterer();
-      /**
-       * This event is fired when a cluster marker is clicked.
-       * @name MarkerClusterer#click
-       * @param {Cluster} c The cluster that was clicked.
-       * @event
-       */
-      google.maps.event.trigger(mc, "click", cClusterIcon.cluster_);
-      google.maps.event.trigger(mc, "clusterclick", cClusterIcon.cluster_); // deprecated name
+    google.maps.event.addDomListener(this.div_, "click", function (e) {
+        cMouseDownInCluster = false;
+        if (!cDraggingMapByCluster) {
+            var theBounds;
+            var mz;
+            var mc = cClusterIcon.cluster_.getMarkerClusterer();
+            /**
+             * This event is fired when a cluster marker is clicked.
+             * @name MarkerClusterer#click
+             * @param {Cluster} c The cluster that was clicked.
+             * @event
+             */
+            google.maps.event.trigger(mc, "click", cClusterIcon.cluster_);
+            google.maps.event.trigger(mc, "clusterclick", cClusterIcon.cluster_); // deprecated name
 
-      // The default click handler follows. Disable it by setting
-      // the zoomOnClick property to false.
-      if (mc.getZoomOnClick()) {
-        // Zoom into the cluster.
-        mz = mc.getMaxZoom();
-        theBounds = cClusterIcon.cluster_.getBounds();
-        mc.getMap().fitBounds(theBounds);
-        // There is a fix for Issue 170 here:
-        setTimeout(function () {
-          mc.getMap().fitBounds(theBounds);
-          // Don't zoom beyond the max zoom level
-          if (mz !== null && (mc.getMap().getZoom() > mz)) {
-            mc.getMap().setZoom(mz + 1);
-          }
-        }, 100);
-      }
+            // The default click handler follows. Disable it by setting
+            // the zoomOnClick property to false.
+            if (mc.getZoomOnClick()) {
+                // Driivz addition | show infoWindow for clusterer on max zoom
+                if (MarkerClusterer.MAX_ZOOM_AVAILABLE == mc.getMap().getZoom()) { // cluster was clicked though we are on maximum zoom
+                    var markersListInClusterer = cClusterIcon.cluster_.getMarkers();
 
-      // Prevent event propagation to the map:
-      e.cancelBubble = true;
-      if (e.stopPropagation) {
-        e.stopPropagation();
-      }
-    }
-  });
+                    // START drawing infoWindow elements
+                    var mCIWList = document.createElement("ul");
+                    for (var mcIndex in markersListInClusterer) {
+                        markerInClusterer = markersListInClusterer[mcIndex];
+
+                        var mCIWListItem = document.createElement("li");
+                        var newContent = document.createTextNode(markerInClusterer.title);
+
+                        mCIWListItem.appendChild(newContent);
+                        mCIWListItem.onclick = function () { // attach row click event, that would trigger the specific marker's click event
+                            google.maps.event.trigger(markerInClusterer, "click", cClusterIcon.cluster_);
+                        };
+
+                        mCIWList.appendChild(mCIWListItem);
+                    }
+
+                    var mCIWDivWrap = document.createElement("div");
+                    mCIWDivWrap.className = "info-window-wrapper info-window-multi-wrapper";
+                    mCIWDivWrap.appendChild(document.createTextNode(com.driivz.portal.common.Locale.get("infowindow.multi.found_x_stations").format(markersListInClusterer.length)));
+                    mCIWDivWrap.appendChild(mCIWList);
+                    // END drawing infoWindow elements
+
+                    var mCIW = new google.maps.InfoWindow({
+                        content: mCIWDivWrap
+                    });
+                    mCIW.open(mc.getMap(), markerInClusterer);
+                }
+                // end Driivz addition
+
+                // Zoom into the cluster.
+                mz = mc.getMaxZoom();
+                theBounds = cClusterIcon.cluster_.getBounds();
+                mc.getMap().fitBounds(theBounds);
+                // There is a fix for Issue 170 here:
+                setTimeout(function () {
+                    mc.getMap().fitBounds(theBounds);
+                    // Don't zoom beyond the max zoom level
+                    if (mz !== null && (mc.getMap().getZoom() > mz)) {
+                        mc.getMap().setZoom(mz + 1);
+                    }
+                }, 100);
+            }
+
+            // Prevent event propagation to the map:
+            e.cancelBubble = true;
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+        }
+    });
 
   google.maps.event.addDomListener(this.div_, "mouseover", function () {
     var mc = cClusterIcon.cluster_.getMarkerClusterer();
