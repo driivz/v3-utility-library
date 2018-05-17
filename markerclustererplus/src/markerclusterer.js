@@ -171,12 +171,16 @@ ClusterIcon.prototype.onAdd = function () {
                     for (var mcIndex in markersListInClusterer) {
                         markerInClusterer = markersListInClusterer[mcIndex];
 
-                        var mCIWListItem = document.createElement("li");
+                        var mCIWListItem = document.createElement("li")
+                        $(mCIWListItem).attr("data",mcIndex);
                         var newContent = document.createTextNode(markerInClusterer.title);
 
                         mCIWListItem.appendChild(newContent);
                         mCIWListItem.onclick = function () { // attach row click event, that would trigger the specific marker's click event
-                            google.maps.event.trigger(markerInClusterer, "click", cClusterIcon.cluster_);
+                            var clusterId=$(this).attr("data");
+                            var selectedMarker = markersListInClusterer[clusterId];
+                            $(".info-window-wrapper.info-window-multi-wrapper").parent().parent().parent().css("z-index");
+                            google.maps.event.trigger(selectedMarker, "click", cClusterIcon.cluster_);
                         };
 
                         mCIWList.appendChild(mCIWListItem);
@@ -192,21 +196,22 @@ ClusterIcon.prototype.onAdd = function () {
                         content: mCIWDivWrap
                     });
                     mCIW.open(mc.getMap(), markerInClusterer);
-                }
-                // end Driivz addition
 
-                // Zoom into the cluster.
-                mz = mc.getMaxZoom();
-                theBounds = cClusterIcon.cluster_.getBounds();
-                mc.getMap().fitBounds(theBounds);
-                // There is a fix for Issue 170 here:
-                setTimeout(function () {
+                }
+                else {  // end Driivz addition
+                    // Zoom into the cluster.
+                    mz = mc.getMaxZoom();
+                    theBounds = cClusterIcon.cluster_.getBounds();
                     mc.getMap().fitBounds(theBounds);
-                    // Don't zoom beyond the max zoom level
-                    if (mz !== null && (mc.getMap().getZoom() > mz)) {
-                        mc.getMap().setZoom(mz + 1);
-                    }
-                }, 100);
+                    // There is a fix for Issue 170 here:
+                    setTimeout(function () {
+                        mc.getMap().fitBounds(theBounds);
+                        // Don't zoom beyond the max zoom level
+                        if (mz !== null && (mc.getMap().getZoom() > mz)) {
+                            mc.getMap().setZoom(mz + 1);
+                        }
+                    }, 100);
+                }
             }
 
             // Prevent event propagation to the map:
