@@ -147,6 +147,7 @@ ClusterIcon.prototype.onAdd = function () {
     google.maps.event.addDomListener(this.div_, "click", function (e) {
         cMouseDownInCluster = false;
         if (!cDraggingMapByCluster) {
+            //NOTE (ADDED FIX FROM): https://code.google.com/p/google-maps-utility-library-v3/issues/detail?id=210
             var theBounds;
             var mz;
             var mc = cClusterIcon.cluster_.getMarkerClusterer();
@@ -166,14 +167,28 @@ ClusterIcon.prototype.onAdd = function () {
                 mz = mc.getMaxZoom();
                 theBounds = cClusterIcon.cluster_.getBounds();
                 mc.getMap().fitBounds(theBounds);
-                // There is a fix for Issue 170 here:
+                // There is a fix for  Issue 170  here:
                 setTimeout(function () {
                     mc.getMap().fitBounds(theBounds);
                     // Don't zoom beyond the max zoom level
                     if (mz !== null && (mc.getMap().getZoom() > mz)) {
                         mc.getMap().setZoom(mz + 1);
                     }
+                    // getting the type the map is and what the zoom is set to
+                    var mapType = mc.getMap().getMapTypeId();
+                    var mapZoomLvl = mc.getMap().getZoom();
+
+                    //if the zoom is set to the highest zoom we could have a cluster that is unbreakable.
+                    // To make sure the cluster does not disappear repaint() is used. The repaint()
+                    //function does a recalculation of all clusters and reprints them, thus if it did not
+                    //break it will re print our cluster.
+                    if ((mapZoomLvl >= 21 && mapType == "roadmap") ||
+                        (mapZoomLvl >= 20 && mapType == "hybrid"))
+                    {
+                        mc.repaint();//The Sites can not be broken repaint it on the screen
+                    }
                 }, 100);
+
             }
 
             // Prevent event propagation to the map:
