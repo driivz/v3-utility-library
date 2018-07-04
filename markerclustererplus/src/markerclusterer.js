@@ -495,6 +495,7 @@ Cluster.prototype.addMarker = function (marker) {
   var i;
   var mCount;
   var mz;
+  var minz;
 
   if (this.isMarkerAlreadyAdded_(marker)) {
     return false;
@@ -518,8 +519,14 @@ Cluster.prototype.addMarker = function (marker) {
 
   mCount = this.markers_.length;
   mz = this.markerClusterer_.getMaxZoom();
+  minz = this.markerClusterer_.getMinZoom();
   if (mz !== null && this.map_.getZoom() > mz) {
     // Zoomed in past max zoom, so show the marker.
+    if (marker.getMap() !== this.map_) {
+      marker.setMap(this.map_);
+    }
+  } else if (minz !== null && this.map_.getZoom() < minz) {
+    // Zoomed in past min zoom, so show the marker.
     if (marker.getMap() !== this.map_) {
       marker.setMap(this.map_);
     }
@@ -569,8 +576,14 @@ Cluster.prototype.calculateBounds_ = function () {
 Cluster.prototype.updateIcon_ = function () {
   var mCount = this.markers_.length;
   var mz = this.markerClusterer_.getMaxZoom();
+  var minz = this.markerClusterer_.getMinZoom();
 
   if (mz !== null && this.map_.getZoom() > mz) {
+    this.clusterIcon_.hide();
+    return;
+  }
+
+  if (minz !== null && this.map_.getZoom() < minz) {
     this.clusterIcon_.hide();
     return;
   }
@@ -712,6 +725,7 @@ function MarkerClusterer(map, opt_markers, opt_options) {
   this.gridSize_ = opt_options.gridSize || 60;
   this.minClusterSize_ = opt_options.minimumClusterSize || 2;
   this.maxZoom_ = opt_options.maxZoom || null;
+  this.minZoom_ = opt_options.minZoom || null;
   this.styles_ = opt_options.styles || [];
   this.title_ = opt_options.title || "";
   this.zoomOnClick_ = true;
@@ -921,6 +935,26 @@ MarkerClusterer.prototype.getMaxZoom = function () {
  */
 MarkerClusterer.prototype.setMaxZoom = function (maxZoom) {
   this.maxZoom_ = maxZoom;
+};
+
+
+/**
+ *  Returns the value of the <code>maxZoom</code> property.
+ *
+ *  @return {number} The maximum zoom level.
+ */
+MarkerClusterer.prototype.getMinZoom = function () {
+  return this.minZoom_;
+};
+
+
+/**
+ *  Sets the value of the <code>minZoom</code> property.
+ *
+ *  @param {number} minZoom The minimum zoom level.
+ */
+MarkerClusterer.prototype.setMinZoom = function (minZoom) {
+  this.minZoom_ = minZoom;
 };
 
 
