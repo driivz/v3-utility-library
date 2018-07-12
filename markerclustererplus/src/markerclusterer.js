@@ -273,12 +273,13 @@ ClusterIcon.prototype.show = function () {
     var spriteV = parseInt(bp[1].replace(/^\s+|\s+$/g, ""), 10);
     var pos = this.getPosFromLatLng_(this.center_);
     this.div_.style.cssText = this.createCss(pos);
-    img = "<img src='" + this.url_ + "' style='position: absolute; top: " + spriteV + "px; left: " + spriteH + "px; ";
+    img = "<img src='" + this.url_ + "' style='position: absolute; top: " + -spriteV + "px; left: " + -spriteH + "px; ";
     if (this.cluster_.getMarkerClusterer().enableRetinaIcons_) {
-      img += "width: " + this.width_ + "px; height: " + this.height_ + "px;";
+        img += "width: " + this.width_ + "px; height: " + this.height_ + "px;";
     } else {
-      img += "clip: rect(" + (-1 * spriteV) + "px, " + ((-1 * spriteH) + this.width_) + "px, " +
-          ((-1 * spriteV) + this.height_) + "px, " + (-1 * spriteH) + "px);";
+        // rect (top, right, bottom, left)
+        img += "clip: rect(" + (spriteV) + "px, " + ((spriteH) + this.width_) + "px, " +
+            ((spriteV) + this.height_) + "px, " + (spriteH) + "px);";
     }
     img += "'>";
     this.div_.innerHTML = img + "<div style='" +
