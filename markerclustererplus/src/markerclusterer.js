@@ -102,7 +102,7 @@ function ClusterIcon(cluster, styles) {
     this.div_ = null;
     this.sums_ = null;
     this.visible_ = false;
-    this.rendered_ = false;
+    this.rendered_ = {};
 
     this.setMap(cluster.getMap()); // Note: this causes onAdd to be called
 }
@@ -235,7 +235,7 @@ ClusterIcon.prototype.onRemove = function () {
         this.div_.parentNode.removeChild(this.div_);
         this.div_ = null;
 
-        this.rendered_ = false;
+        this.rendered_ = {};
     }
 };
 
@@ -268,7 +268,8 @@ ClusterIcon.prototype.hide = function () {
  * Positions and shows the icon.
  */
 ClusterIcon.prototype.show = function () {
-    if (this.div_ && !this.rendered_) {
+    var zoom = this.cluster_.map_.getZoom();
+    if (this.div_ && !this.rendered_[zoom]) {
 
         var pos = this.getPosFromLatLng_(this.center_);
         this.div_.style.cssText = this.createCss(pos);
@@ -308,7 +309,7 @@ ClusterIcon.prototype.show = function () {
             this.cluster_.getMarkerClusterer().getClusterRenderer().apply(this, [this.div_, this.cluster_, this.sums_.text]);
         }
 
-        this.rendered_ = true;
+        this.rendered_[zoom] = true;
 
         if (typeof this.sums_.title === "undefined" || this.sums_.title === "") {
             this.div_.title = this.cluster_.getMarkerClusterer().getTitle();
